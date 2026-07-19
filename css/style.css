@@ -288,9 +288,11 @@ body {
 }
 .ring::after { content:""; position:absolute; inset:2px; border-radius:50%;
   border: 2.5px solid var(--ink); pointer-events:none; }
-.ring__num { position: absolute; inset: 0; display: grid; place-items: center;
-  font-family: var(--display); font-size: 19px; color: var(--ink); }
-.ring__num small { font-size: 11px; color: var(--text-mute); }
+.ring__num { position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  gap: 1px; white-space: nowrap;
+  font-family: var(--display); font-size: 17px; color: var(--ink); }
+.ring__num small { font-size: 10px; color: var(--text-mute); }
 
 /* ---------- panel ---------- */
 .panel {
