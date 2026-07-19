@@ -74,7 +74,10 @@ function sheet(name) {
     sh.getRange(1, 1, 1, HEADERS[name].length).setFontWeight('bold');
     sh.setFrozenRows(1);
     if (name === SHEET_MENUS) seedMenus(sh);
-    if (name === SHEET_EXERCISES) seedExercises(sh);
+    if (name === SHEET_EXERCISES) {
+      seedExercises(sh);
+      applyGroupDropdown(sh);
+    }
   }
   return sh;
 }
@@ -151,6 +154,16 @@ function saveMenus(menus, exercises) {
     });
     shE.getRange(2, 1, ev.length, HEADERS[SHEET_EXERCISES].length).setValues(ev);
   }
+}
+
+/* 種目マスタの部位キー列(A)を6キーのプルダウンにする（シート新規作成時用。
+   既存の筋トレDBには2026-07-19にUIから設定済み） */
+function applyGroupDropdown(sh) {
+  var rule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(['chest', 'back', 'legs', 'shoulder', 'arm', 'core'], true)
+    .setAllowInvalid(false)
+    .build();
+  sh.getRange('A2:A1000').setDataValidation(rule);
 }
 
 function clearBody(sh) {
