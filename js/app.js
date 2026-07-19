@@ -258,10 +258,11 @@ function renderLogMenuTabs() {
   if (!wrap) return;
   wrap.innerHTML = '';
   const active = currentLogMenu();
-  const suggested = todayMenu();
+  const low = lowFreqMenuIds();
   MENUS.forEach((m) => {
-    const label = m.id === suggested.id ? `${esc(m.name)} ★` : esc(m.name);
+    const label = low.has(m.id) ? `${esc(m.name)} ★` : esc(m.name);
     const chip = el('button', 'menu-chip' + (m.id === active.id ? ' is-active' : ''), label);
+    if (low.has(m.id)) chip.title = '最近やれてない部位';
     chip.setAttribute('role', 'tab');
     chip.setAttribute('aria-selected', String(m.id === active.id));
     chip.addEventListener('click', () => {
@@ -334,6 +335,26 @@ function streakDays() {
   return streak;
 }
 
+/* 直近4週間でトレーニング頻度が最も少ない部位（サボり気味の目印★用）。
+   差が無い（全部同じ回数）なら空 = 目印なし */
+const FREQ_WINDOW_DAYS = 28;
+function lowFreqMenuIds() {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - FREQ_WINDOW_DAYS);
+  const cutoffStr = localYmd(cutoff);
+  const days = new Map(MENUS.map((m) => [m.id, new Set()]));
+  RECORDS.forEach((r) => {
+    const d = recDate(r);
+    if (!d || d < cutoffStr) return;
+    const m = menuByName(r.menu);
+    if (m && days.has(m.id)) days.get(m.id).add(d);
+  });
+  const sizes = MENUS.map((m) => days.get(m.id).size);
+  if (Math.min(...sizes) === Math.max(...sizes)) return new Set();
+  const min = Math.min(...sizes);
+  return new Set(MENUS.filter((_, i) => sizes[i] === min).map((m) => m.id));
+}
+
 /* 種目ごとの最重量セット（自己ベスト）を重い順に */
 function realPRs() {
   const best = new Map();
@@ -362,17 +383,18 @@ function renderHome() {
     <li><b>${exCount * SETS_PER_EXERCISE}</b> セット</li>
     <li><b>~${exCount * MIN_PER_EXERCISE}</b> 分</li>`;
 
-  // ローテーション表示 = 部位の選択UI（タップで今日のメニューを変更、★は提案）
+  // ローテーション表示 = 部位の選択UI（タップで今日のメニューを変更、★は最近頻度が少ない部位）
   const rot = $('#hero-rotation');
   rot.innerHTML = '';
-  const suggested = todayMenu();
+  const low = lowFreqMenuIds();
   MENUS.forEach((m, i) => {
     if (i) rot.appendChild(el('span', 'sep', '→'));
     const btn = el(
       'button',
       'rot-btn' + (m.id === menu.id ? ' is-active' : ''),
-      esc(m.name) + (m.id === suggested.id ? ' ★' : '')
+      esc(m.name) + (low.has(m.id) ? ' ★' : '')
     );
+    if (low.has(m.id)) btn.title = '最近やれてない部位';
     btn.setAttribute('aria-pressed', String(m.id === menu.id));
     btn.addEventListener('click', () => {
       if (m.id === menu.id) return;
