@@ -140,6 +140,7 @@ let RECORDS = [];
 
 /* 記録画面が今日どのメニュー(部位)で動いているか */
 let logMenuName = '';
+let logMenuId = null; // 手動で選んだ部位（nullならローテーションの提案に従う）
 
 const SETS_PER_EXERCISE = 3; // 履歴がない種目の初期セット数
 const MIN_PER_EXERCISE = 12; // 所要時間の目安(分/種目)
@@ -229,9 +230,14 @@ function makeSessionExercise(name, group, prevRecs) {
   };
 }
 
-/* 記録画面を「今日の部位」の種目で組み立てる（前回の重量・レップを初期値に） */
+/* 記録画面で実際に使う部位 = 手動選択 > ローテーションの提案 */
+function currentLogMenu() {
+  return (logMenuId && MENUS.find((m) => m.id === logMenuId)) || todayMenu();
+}
+
+/* 記録画面を選択中の部位の種目で組み立てる（前回の重量・レップを初期値に） */
 function buildTodayExercises() {
-  const menu = todayMenu();
+  const menu = currentLogMenu();
   logMenuName = menu.name;
   EXERCISES.length = 0;
   exercisesForMenu(menu.id).forEach(({ group, name }) => {
@@ -243,6 +249,31 @@ function buildTodayExercises() {
     const now = new Date();
     eyebrow.textContent = `${now.getMonth() + 1}月${now.getDate()}日 · 今日は${menu.name}`;
   }
+  renderLogMenuTabs();
+}
+
+/* 記録画面の部位切り替えチップ */
+function renderLogMenuTabs() {
+  const wrap = $('#log-menu-tabs');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const active = currentLogMenu();
+  const suggested = todayMenu();
+  MENUS.forEach((m) => {
+    const label = m.id === suggested.id ? `${esc(m.name)} ★` : esc(m.name);
+    const chip = el('button', 'menu-chip' + (m.id === active.id ? ' is-active' : ''), label);
+    chip.setAttribute('role', 'tab');
+    chip.setAttribute('aria-selected', String(m.id === active.id));
+    chip.addEventListener('click', () => {
+      if (m.id === active.id) return;
+      logMenuId = m.id;
+      buildTodayExercises();
+      renderExercises();
+      updateLogSummary();
+      toast(`${m.name}トレに切り替え`);
+    });
+    wrap.appendChild(chip);
+  });
 }
 
 /* ---------- 週・連続日数の集計 ---------- */
@@ -404,11 +435,19 @@ function renderExercises() {
     const head = el('div', 'ex__head', `
       <span class="ex__badge">${ex.icon}</span>
       <div>
-        <div class="ex__name">${ex.name}</div>
-        <div class="ex__muscle">${ex.muscle}</div>
+        <div class="ex__name">${esc(ex.name)}</div>
+        <div class="ex__muscle">${esc(ex.muscle)}</div>
       </div>
-      <div class="ex__prev">前回<b>${ex.prev}</b></div>
+      <div class="ex__prev">前回<b>${esc(ex.prev)}</b></div>
     `);
+    const del = el('button', 'ex__del', '×');
+    del.setAttribute('aria-label', `${ex.name} を今日のリストから外す`);
+    del.addEventListener('click', () => {
+      EXERCISES.splice(exi, 1);
+      renderExercises();
+      updateLogSummary();
+    });
+    head.appendChild(del);
     card.appendChild(head);
 
     ex.sets.forEach((set, si) => card.appendChild(buildSetRow(exi, si, set)));
@@ -859,27 +898,60 @@ async function saveSession() {
   toast(res.ok ? `${recs.length}セットを${Api.isRemote() ? '同期' : '保存'}` : 'オフライン(未同期)');
 }
 
-/* ＋種目を追加: 今日の部位のまだ入れてない種目から順に足す */
+/* ＋種目を追加: 全部位の種目マスタから選んで追加するピッカー */
+function openExercisePicker() {
+  closeExercisePicker();
+  const inSession = new Set(EXERCISES.map((e) => e.name));
+  const menu = currentLogMenu();
+
+  const overlay = el('div', 'picker');
+  overlay.id = 'exercise-picker';
+  const panel = el('div', 'picker__panel');
+  panel.appendChild(el('p', 'picker__title', '種目を選ぶ'));
+
+  // 選択中の部位を先頭に
+  const groups = [...MUSCLE_GROUPS].sort(
+    (a, b) => Number(b.key === menu.id) - Number(a.key === menu.id)
+  );
+  let candidates = 0;
+  groups.forEach((g) => {
+    const items = g.items.filter((it) => !inSession.has(it.name));
+    if (!items.length) return;
+    candidates += items.length;
+    panel.appendChild(el('p', 'picker__group', `${g.icon} ${esc(g.name)}`));
+    const wrap = el('div', 'picker__items');
+    items.forEach((it) => {
+      const b = el('button', 'picker__item', esc(it.name));
+      b.addEventListener('click', () => {
+        EXERCISES.push(makeSessionExercise(it.name, g, lastRecordsFor(it.name)));
+        renderExercises();
+        updateLogSummary();
+        closeExercisePicker();
+        toast(`${it.name} を追加`);
+      });
+      wrap.appendChild(b);
+    });
+    panel.appendChild(wrap);
+  });
+  if (!candidates) panel.appendChild(el('p', 'picker__empty', '追加できる種目がありません（メニュー画面で種目を増やせます）'));
+
+  const close = el('button', 'picker__close', '閉じる');
+  close.addEventListener('click', closeExercisePicker);
+  panel.appendChild(close);
+
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeExercisePicker(); });
+  overlay.appendChild(panel);
+  $('.phone').appendChild(overlay);
+}
+
+function closeExercisePicker() {
+  const node = $('#exercise-picker');
+  if (node) node.remove();
+}
+
 function bindAddExercise() {
   const btn = $('#add-exercise');
-  if (!btn) return;
-  btn.addEventListener('click', () => {
-    const menu = todayMenu();
-    const inSession = new Set(EXERCISES.map((e) => e.name));
-    const groups = [...MUSCLE_GROUPS].sort(
-      (a, b) => Number(b.key === menu.id) - Number(a.key === menu.id)
-    );
-    for (const g of groups) {
-      const item = g.items.find((it) => !inSession.has(it.name));
-      if (!item) continue;
-      EXERCISES.push(makeSessionExercise(item.name, g, lastRecordsFor(item.name)));
-      renderExercises();
-      updateLogSummary();
-      toast(`${item.name} を追加`);
-      return;
-    }
-    toast('追加できる種目がありません');
-  });
+  if (btn) btn.addEventListener('click', openExercisePicker);
 }
 
 function saveLabel(res) {

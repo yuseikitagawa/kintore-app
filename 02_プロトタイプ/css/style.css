@@ -480,6 +480,59 @@ body {
 .menu-chip.is-active { background: var(--red); color: var(--paper-2); transform: rotate(-2deg); }
 .menu-chip--add { background: var(--yellow); width: 42px; text-align: center; padding: 7px 0; }
 
+/* ---------- 記録画面: 部位切替 & 種目の削除・追加ピッカー ---------- */
+#log-menu-tabs { padding-bottom: 14px; }
+
+.ex__del {
+  flex: none; width: 26px; height: 26px; margin-left: 4px;
+  border: 2.5px solid var(--ink); border-radius: 999px;
+  background: var(--paper); color: var(--ink);
+  font-size: 15px; font-weight: 900; line-height: 1;
+  cursor: pointer; box-shadow: 2px 2px 0 var(--ink);
+}
+.ex__del:active { transform: translate(1px,1px); box-shadow: none; }
+
+.picker {
+  position: absolute; inset: 0; z-index: 60;
+  background: rgba(22,18,13,0.55);
+  display: grid; align-items: end;
+}
+.picker__panel {
+  max-height: 74%; overflow-y: auto;
+  background: var(--paper-2);
+  border-top: var(--bd);
+  border-radius: 22px 22px 0 0;
+  padding: 18px 16px calc(20px + env(safe-area-inset-bottom));
+  animation: picker-in 220ms var(--ease);
+}
+@keyframes picker-in { from { transform: translateY(30%); } to { transform: translateY(0); } }
+.picker__title {
+  font-family: var(--display); font-size: 22px; margin-bottom: 10px;
+  letter-spacing: 0.02em;
+}
+.picker__group {
+  font-size: 12px; font-weight: 800; color: var(--text-dim);
+  margin: 12px 0 6px;
+}
+.picker__items { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.picker__item {
+  border: var(--bd); border-radius: var(--r-sm);
+  background: var(--paper); color: var(--ink);
+  padding: 10px 8px; font-size: 13px; font-weight: 800;
+  cursor: pointer; box-shadow: 3px 3px 0 var(--ink);
+  text-align: center;
+}
+.picker__item:active { transform: translate(2px,2px); box-shadow: none; }
+.picker__empty { font-size: 13px; font-weight: 700; color: var(--text-mute); padding: 8px 0; }
+.picker__close {
+  display: block; width: 100%; margin-top: 16px;
+  border: var(--bd); border-radius: var(--r-md);
+  background: var(--yellow); color: var(--ink);
+  font-family: var(--display); font-size: 17px;
+  padding: 11px 0; cursor: pointer; box-shadow: var(--pop-sm);
+}
+.picker__close:active { transform: translate(2px,2px); box-shadow: none; }
+
 .menu-name {
   display: flex; align-items: center; gap: 10px;
   margin: 0 3px 18px; padding: 10px 14px;
