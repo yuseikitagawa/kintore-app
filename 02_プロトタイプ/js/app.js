@@ -409,11 +409,14 @@ function renderHome() {
 
   if (!RECORDS.length) return; // 記録が無い間はリング/連続はサンプルのまま
 
-  const daysThisWeek = new Set(RECORDS.map(recDate).filter(isThisWeek)).size;
+  // 今月のトレーニング回数（日数ベース）。ゲージは経過日数に対する割合
+  const ym = todayStr().slice(0, 7);
+  const daysThisMonth = new Set(RECORDS.map(recDate).filter((d) => d.startsWith(ym))).size;
+  const elapsed = new Date().getDate();
   const ring = $('#week-ring');
-  if (ring) ring.style.setProperty('--val', Math.round((daysThisWeek / 7) * 100));
-  $('#week-ring-num').innerHTML = `${daysThisWeek}<small>/7</small>`;
-  $('#week-count').textContent = `${daysThisWeek}回 達成`;
+  if (ring) ring.style.setProperty('--val', Math.min(100, Math.round((daysThisMonth / elapsed) * 100)));
+  $('#week-ring-num').textContent = String(daysThisMonth);
+  $('#week-count').textContent = `${daysThisMonth}回 達成`;
   $('#streak-num').textContent = String(streakDays());
 
   const home = $('#home-pr-list');
