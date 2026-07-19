@@ -270,6 +270,7 @@ function renderLogMenuTabs() {
       buildTodayExercises();
       renderExercises();
       updateLogSummary();
+      renderHome(); // ホームの「今日のメニュー」表示も同期
       toast(`${m.name}トレに切り替え`);
     });
     wrap.appendChild(chip);
@@ -352,7 +353,7 @@ function renderHome() {
   const dateEl = $('#screen-home .topbar__eyebrow');
   if (dateEl) dateEl.textContent = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 · ${wd}曜`;
 
-  const menu = todayMenu();
+  const menu = currentLogMenu(); // 選択中の部位（未選択ならローテーションの提案）
   $('#hero-menu').textContent = menu.name;
 
   const exCount = exercisesForMenu(menu.id).length;
@@ -361,9 +362,28 @@ function renderHome() {
     <li><b>${exCount * SETS_PER_EXERCISE}</b> セット</li>
     <li><b>~${exCount * MIN_PER_EXERCISE}</b> 分</li>`;
 
-  $('#hero-rotation').innerHTML = MENUS
-    .map((m) => (m.id === menu.id ? `<b>${esc(m.name)}</b>` : `<span>${esc(m.name)}</span>`))
-    .join('<span class="sep">→</span>');
+  // ローテーション表示 = 部位の選択UI（タップで今日のメニューを変更、★は提案）
+  const rot = $('#hero-rotation');
+  rot.innerHTML = '';
+  const suggested = todayMenu();
+  MENUS.forEach((m, i) => {
+    if (i) rot.appendChild(el('span', 'sep', '→'));
+    const btn = el(
+      'button',
+      'rot-btn' + (m.id === menu.id ? ' is-active' : ''),
+      esc(m.name) + (m.id === suggested.id ? ' ★' : '')
+    );
+    btn.setAttribute('aria-pressed', String(m.id === menu.id));
+    btn.addEventListener('click', () => {
+      if (m.id === menu.id) return;
+      logMenuId = m.id;
+      buildTodayExercises();
+      renderExercises();
+      updateLogSummary();
+      renderHome();
+    });
+    rot.appendChild(btn);
+  });
 
   if (!RECORDS.length) return; // 記録が無い間はリング/連続はサンプルのまま
 
