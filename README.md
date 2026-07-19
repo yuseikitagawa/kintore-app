@@ -24,7 +24,10 @@
 
 ## 使い方
 
-`02_プロトタイプ/index.html` をブラウザでダブルクリックで開くだけ。ビルド不要。
+**iPhone / どこからでも**: https://yuseikitagawa.github.io/kintore-app/
+（Safariで開いて 共有 → ホーム画面に追加 でアプリとして使える）
+
+**Macローカル**: `02_プロトタイプ/index.html` をブラウザでダブルクリックで開くだけ。ビルド不要。
 下部タブで ホーム / 記録 / 履歴 / 統計 / メニュー の5画面を切り替えられる。
 - 「記録」画面：セットの完了チェック・セット追加が動く
 - 「メニュー」画面：部位別に種目を追加/削除、メニューへのON/OFF、複数メニュー（肩/背中/脚/胸/腕…）の追加・切替・名前編集ができる
@@ -59,5 +62,16 @@
 
 接続先: Googleドライブの「筋トレDB」スプレッドシート（タブ: 記録 / メニュー / 種目マスタ）
 Apps Scriptプロジェクト名: 筋トレAPI（コードを直したら「デプロイを管理→新バージョン」で反映。URLは不変）
+
+## 公開（GitHub Pages）
+
+- リポジトリ: https://github.com/yuseikitagawa/kintore-app （公開・mainにプロジェクト全体）
+- 公開URL: https://yuseikitagawa.github.io/kintore-app/ （gh-pagesブランチ = 02_プロトタイプの中身）
+- 更新手順（コードを直したら）:
+  ```bash
+  git add -A && git commit -m "..." && git push
+  git -c core.quotepath=false subtree push --prefix="02_プロトタイプ" origin gh-pages
+  ```
+  ※ `core.quotepath=false` は日本語フォルダ名でsubtreeが落ちるのを防ぐため必須
 
 デザインの方向性・入れたい機能など、触ってみて気になった点を教えてください。
