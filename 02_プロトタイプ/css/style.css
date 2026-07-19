@@ -166,6 +166,9 @@ body {
   paint-order: stroke fill;
   text-shadow: 3px 3px 0 rgba(0,0,0,0.18);
 }
+/* ホームの挨拶「やるぞ！北川！」は名前が改行で割れないよう1行固定 */
+#home-h { font-size: 33px; white-space: nowrap; }
+
 .avatar {
   width: 46px; height: 46px; border-radius: 50%;
   display: grid; place-items: center; flex: none;
