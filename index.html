@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>筋トレ記録</title>
+  <meta name="theme-color" content="#ffd23f" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <!-- iOS: ホーム画面に追加でフルスクリーン起動 -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="筋トレ" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- デスクトップで見たときの背景。実機ではフレームは消える想定 -->
+  <div class="stage">
+    <div class="phone" role="application" aria-label="筋トレ記録アプリ プロトタイプ">
+      <div class="phone__notch" aria-hidden="true"></div>
+
+      <!-- ステータスバー -->
+      <div class="statusbar" aria-hidden="true">
+        <span class="statusbar__time">9:41</span>
+        <span class="statusbar__icons">
+          <i class="ic ic-signal"></i><i class="ic ic-wifi"></i><i class="ic ic-batt"></i>
+        </span>
+      </div>
+
+      <!-- スクリーン群 -->
+      <main class="screens" id="screens">
+
+        <!-- ========== ホーム ========== -->
+        <section class="screen is-active" id="screen-home" aria-labelledby="home-h">
+          <header class="topbar">
+            <div>
+              <p class="topbar__eyebrow">2026年7月11日 · 土曜</p>
+              <h1 class="topbar__title" id="home-h">おかえり、Yusei</h1>
+            </div>
+            <div class="avatar" aria-hidden="true">Y</div>
+          </header>
+
+          <!-- 今日のメニュー（ヒーローカード） -->
+          <article class="hero-card">
+            <div class="hero-card__glow" aria-hidden="true"></div>
+            <p class="hero-card__label">今日のメニュー</p>
+            <h2 class="hero-card__title" id="hero-menu">肩</h2>
+            <p class="hero-card__rotation" id="hero-rotation" aria-label="部位ローテーション"></p>
+            <ul class="hero-card__meta" id="hero-meta">
+              <li><b>2</b> 種目</li>
+              <li><b>6</b> セット</li>
+              <li><b>~24</b> 分</li>
+            </ul>
+            <button class="btn btn--accent" data-goto="log">
+              トレーニング開始
+              <span class="btn__arrow" aria-hidden="true">→</span>
+            </button>
+          </article>
+
+          <!-- ストリーク & 週間リング -->
+          <div class="stat-row">
+            <article class="stat-card">
+              <div class="ring" style="--val:71" id="week-ring">
+                <svg viewBox="0 0 44 44" aria-hidden="true">
+                  <circle class="ring__bg" cx="22" cy="22" r="18" />
+                  <circle class="ring__fg" cx="22" cy="22" r="18" />
+                </svg>
+                <span class="ring__num" id="week-ring-num">5<small>/7</small></span>
+              </div>
+              <div class="stat-card__body">
+                <p class="stat-card__k">今週</p>
+                <p class="stat-card__v" id="week-count">5回 達成</p>
+              </div>
+            </article>
+
+            <article class="stat-card stat-card--streak">
+              <span class="flame" aria-hidden="true">🔥</span>
+              <div class="stat-card__body">
+                <p class="stat-card__k">連続</p>
+                <p class="stat-card__v"><b id="streak-num">12</b> 日</p>
+              </div>
+            </article>
+          </div>
+
+          <!-- 週間ボリューム（ミニ棒グラフ） -->
+          <article class="panel">
+            <div class="panel__head">
+              <h3 class="panel__title">週間ボリューム</h3>
+              <span class="panel__sub">合計 <b id="week-total">38.2t</b></span>
+            </div>
+            <div class="bars" id="home-bars" aria-hidden="true"></div>
+            <div class="bars__labels">
+              <span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span><span>日</span>
+            </div>
+          </article>
+
+          <!-- 直近の自己ベスト -->
+          <article class="panel">
+            <div class="panel__head">
+              <h3 class="panel__title">最近の自己ベスト</h3>
+              <span class="pr-tag">PR</span>
+            </div>
+            <ul class="pr-list" id="home-pr-list">
+              <li><span>ベンチプレス</span><b>90 kg <small>×5</small></b></li>
+              <li><span>スクワット</span><b>120 kg <small>×3</small></b></li>
+            </ul>
+          </article>
+        </section>
+
+        <!-- ========== 記録 ========== -->
+        <section class="screen" id="screen-log" aria-labelledby="log-h" hidden>
+          <header class="topbar">
+            <div>
+              <p class="topbar__eyebrow" id="log-eyebrow">今日のトレーニング</p>
+              <h1 class="topbar__title" id="log-h">肩</h1>
+            </div>
+            <button class="pill pill--live"><span class="dot"></span>LIVE</button>
+          </header>
+
+          <!-- 進行中サマリー -->
+          <div class="log-summary">
+            <div><p class="log-summary__k">ボリューム</p><p class="log-summary__v">6,420<small>kg</small></p></div>
+            <div><p class="log-summary__k">セット</p><p class="log-summary__v">9<small>/18</small></p></div>
+            <div><p class="log-summary__k">種目</p><p class="log-summary__v">2<small>/5</small></p></div>
+          </div>
+
+          <!-- 種目カード群 -->
+          <div id="exercise-list"></div>
+
+          <button class="btn btn--ghost btn--full" id="add-exercise">＋ 種目を追加</button>
+          <button class="btn btn--accent btn--full" id="finish-session" data-goto="history">トレーニングを終了</button>
+        </section>
+
+        <!-- ========== 履歴 ========== -->
+        <section class="screen" id="screen-history" aria-labelledby="hist-h" hidden>
+          <header class="topbar">
+            <div>
+              <p class="topbar__eyebrow" id="hist-sub">これまで 142 セッション</p>
+              <h1 class="topbar__title" id="hist-h">履歴</h1>
+            </div>
+          </header>
+          <div class="history-list" id="history-list"></div>
+        </section>
+
+        <!-- ========== 統計 ========== -->
+        <section class="screen" id="screen-stats" aria-labelledby="stats-h" hidden>
+          <header class="topbar">
+            <div>
+              <p class="topbar__eyebrow">直近12週</p>
+              <h1 class="topbar__title" id="stats-h">統計</h1>
+            </div>
+          </header>
+
+          <article class="panel">
+            <div class="panel__head">
+              <h3 class="panel__title">総ボリューム推移</h3>
+              <span class="panel__sub trend-up" id="trend-pct">▲ 8.4%</span>
+            </div>
+            <svg class="line-chart" id="line-chart" viewBox="0 0 300 120" preserveAspectRatio="none" aria-hidden="true"></svg>
+          </article>
+
+          <article class="panel">
+            <h3 class="panel__title">部位別バランス</h3>
+            <ul class="muscle-list" id="muscle-list"></ul>
+          </article>
+
+          <article class="panel">
+            <div class="panel__head">
+              <h3 class="panel__title">自己ベスト</h3>
+              <span class="pr-tag">PR</span>
+            </div>
+            <ul class="pr-list pr-list--big" id="pr-list"></ul>
+          </article>
+        </section>
+
+        <!-- ========== メニュー編集（部位別） ========== -->
+        <section class="screen" id="screen-menu" aria-labelledby="menu-h" hidden>
+          <header class="topbar">
+            <div>
+              <p class="topbar__eyebrow">部位別で組む</p>
+              <h1 class="topbar__title" id="menu-h">メニュー編集</h1>
+            </div>
+            <button class="pill" id="menu-count" aria-live="polite">0 種目</button>
+          </header>
+
+          <!-- メニュー切替（肩 / 背中 … ＋で追加） -->
+          <div class="menu-tabs" id="menu-tabs" role="tablist" aria-label="メニュー選択"></div>
+
+          <!-- 選択中メニューの名前（編集可） -->
+          <label class="menu-name">
+            <span class="menu-name__k">メニュー名</span>
+            <input class="menu-name__in" id="menu-name" type="text" maxlength="24" />
+          </label>
+
+          <!-- 部位別セクション（アコーディオン） -->
+          <div id="muscle-groups"></div>
+        </section>
+
+      </main>
+
+      <!-- ボトムナビ -->
+      <nav class="tabbar" aria-label="メインナビゲーション">
+        <button class="tab is-active" data-goto="home" aria-current="page">
+          <span class="tab__ico">◆</span><span class="tab__lbl">ホーム</span>
+        </button>
+        <button class="tab" data-goto="log">
+          <span class="tab__ico">✎</span><span class="tab__lbl">記録</span>
+        </button>
+        <button class="tab" data-goto="history">
+          <span class="tab__ico">≡</span><span class="tab__lbl">履歴</span>
+        </button>
+        <button class="tab" data-goto="stats">
+          <span class="tab__ico">▚</span><span class="tab__lbl">統計</span>
+        </button>
+        <button class="tab" data-goto="menu">
+          <span class="tab__ico">▤</span><span class="tab__lbl">メニュー</span>
+        </button>
+      </nav>
+
+      <div class="phone__home" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
